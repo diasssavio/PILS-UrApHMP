@@ -30,7 +30,7 @@ void model::init(){
 				for(IloInt l = 0; l < n; l++){
 					f[i][j][k][l] = IloNumVar(getEnv(), 0, +IloInfinity, ILOFLOAT);
 					stringstream f_name;
-					f_name << "f[" << i << "][" << j << "][" << k << "][" << l << "]";
+					f_name << "f(" << i << ")(" << j << ")(" << k << ")(" << l << ")";
 					f[i][j][k][l].setName(f_name.str().c_str());
 					add(f[i][j][k][l]);
 				}
@@ -42,7 +42,7 @@ void model::init(){
 			z[i][k] = IloNumVar(getEnv(), 0, 1, ILOINT);
 			// z[i][k] = IloNumVar(getEnv(), 0, 1, ILOFLOAT);
 			stringstream z_name;
-			z_name << "z[" << i << "][" << k << "]";
+			z_name << "z(" << i << ")(" << k << ")";
 			z[i][k].setName(z_name.str().c_str());
 			add(z[i][k]);
 		}
@@ -61,7 +61,7 @@ void model::add_const(){
 			expr += z[i][k];
 		IloConstraint c2 = (expr <= r);
 		stringstream c2_name;
-		c2_name << "Cons(2)[" << i << "]";
+		c2_name << "Cons_2(" << i << ")";
 		c2.setName(c2_name.str().c_str());
 		add(c2);
 	}
@@ -71,7 +71,7 @@ void model::add_const(){
 		for(IloInt k = 0; k < n; k++){
 			IloConstraint c3 = (z[i][k] <= z[k][k]);
 			stringstream c3_name;
-			c3_name << "Cons(3)[" << i << "]" << "[" << k << "]";
+			c3_name << "Cons_3(" << i << ")" << "(" << k << ")";
 			c3.setName(c3_name.str().c_str());
 			add(c3);
 		}
@@ -83,7 +83,7 @@ void model::add_const(){
 		expr += z[k][k];
 	IloConstraint c4 = (expr == p);
 	stringstream c4_name;
-	c4_name << "Cons(4)";
+	c4_name << "Cons_4";
 	c4.setName(c4_name.str().c_str());
 	add(c4);
 
@@ -96,7 +96,7 @@ void model::add_const(){
 					expr += f[i][j][k][l];
 			IloConstraint c5 = (expr == 1);
 			stringstream c5_name;
-			c5_name << "Cons(5)[" << i << "]" << "[" << j << "]";
+			c5_name << "Cons_5(" << i << ")" << "(" << j << ")";
 			c5.setName(c5_name.str().c_str());
 			add(c5);
 		}
@@ -110,7 +110,7 @@ void model::add_const(){
 					expr += f[i][j][k][l];
 				IloConstraint c6 = (expr <= z[i][k]);
 				stringstream c6_name;
-				c6_name << "Cons(6)[" << i << "]" << "[" << j << "]" << "[" << k << "]";
+				c6_name << "Cons_6(" << i << ")" << "(" << j << ")" << "(" << k << ")";
 				c6.setName(c6_name.str().c_str());
 				add(c6);
 			}
@@ -122,7 +122,7 @@ void model::add_const(){
 					expr += f[i][j][k][l];
 				IloConstraint c7 = (expr <= z[j][l]);
 				stringstream c7_name;
-				c7_name << "Cons(7)[" << i << "]" << "[" << j << "]" << "[" << l << "]";
+				c7_name << "Cons_7(" << i << ")" << "(" << j << ")" << "(" << l << ")";
 				c7.setName(c7_name.str().c_str());
 				add(c7);
 			}
@@ -134,6 +134,7 @@ void model::add_fixed_const( vector< bool >& alloc_hubs ){
 
 	// vector< bool > alloc_hubs = sol.get_bin_alloc_hubs();
 	for(IloInt k = 0; k < n; k++){
+		if(!alloc_hubs[k]) continue;
 		IloConstraint c8;
 		if(alloc_hubs[k])
 			c8 = (z[k][k] == 1);
@@ -183,6 +184,34 @@ void model::add_fixed_const( vector< bool >& alloc_hubs ){
 							add(c10);
 							fixed_consts.add(&c10);
 						}
+}
+
+void model::add_fixed_const2(vector< bool >& alloc_hubs, vector< vector < unsigned> >& assigned_hubs){
+	// Defining values of z[k][k] & z[i][k] based on alloc_hubs from solution
+	int n = instance.get_n();
+
+	// TODO fix the alloc_hubs variables
+	for(IloInt k = 0; k < n; k++){
+		if(!alloc_hubs[k]) continue;
+		IloConstraint c8;
+		c8 = (z[k][k] == 1);
+		stringstream c8_name;
+		c8_name << "Cons_8(" << k << ")";
+		c8.setName(c8_name.str().c_str());
+		add(c8);
+	}
+
+	// TODO fix the assigned_hubs variables for the hubs selected for fixing
+	for(IloInt i = 0; i < n; i++){
+		for(IloInt k = 0; k < assigned_hubs[i].size(); k++){
+			if(!alloc_hubs[assigned_hubs[i][k]]) continue;
+			IloConstraint c9 = (z[i][k] == 1);
+			stringstream c9_name;
+			c9_name << "Cons_9(" << i << ")(" << k << ")";
+			c9.setName(c9_name.str().c_str());
+			add(c9);
+		}
+	}
 }
 
 void model::remove_fixed_const(){

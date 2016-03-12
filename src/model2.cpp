@@ -234,6 +234,34 @@ void model2::add_fixed_const( vector< bool >& alloc_hubs ) {
 				}
 }
 
+void model2::add_fixed_const2(vector< bool >& alloc_hubs, vector< vector < unsigned> >& assigned_hubs){
+	// Defining values of z[k][k] & z[i][k] based on alloc_hubs from solution
+	int n = instance.get_n();
+
+	// TODO fix the alloc_hubs variables
+	for(IloInt k = 0; k < n; k++){
+		if(!alloc_hubs[k]) continue;
+		IloConstraint c8;
+		c8 = (z[k][k] == 1);
+		stringstream c8_name;
+		c8_name << "Cons_8(" << k << ")";
+		c8.setName(c8_name.str().c_str());
+		add(c8);
+	}
+
+	// TODO fix the assigned_hubs variables for the hubs selected for fixing
+	for(IloInt i = 0; i < n; i++){
+		for(IloInt k = 0; k < assigned_hubs[i].size(); k++){
+			if(!alloc_hubs[assigned_hubs[i][k]]) continue;
+			IloConstraint c9 = (z[i][assigned_hubs[i][k]] == 1);
+			stringstream c9_name;
+			c9_name << "Cons_9(" << i << ")(" << assigned_hubs[i][k] << ")";
+			c9.setName(c9_name.str().c_str());
+			add(c9);
+		}
+	}
+}
+
 void model2::add_obj(){
 	int n = instance.get_n();
 	vector< vector< double > > traffics = instance.get_traffics();

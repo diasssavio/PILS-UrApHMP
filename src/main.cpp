@@ -11,12 +11,15 @@
 #include <vector>
 #include <cstdio>
 #include <ctime>
+#include <ilcplex/ilocplex.h>
 
 #include "../include/FWChrono.h"
 #include "../include/mt19937ar.h"
 #include "../include/ils.h"
 #include "../include/solution.h"
 #include "../include/UrApHMP.h"
+#include "../include/model.h"
+#include "../include/model2.h"
 
 using namespace std;
 
@@ -28,6 +31,7 @@ T string_to(const string& s){
 	return x;
 }
 
+ILOSTLBEGIN
 int main(int argc, char* args[]) {
 	FWChrono timer;
 	timer.start();
@@ -68,34 +72,27 @@ int main(int argc, char* args[]) {
 	int max_r = max_iterations / 2;
 	double alpha_2 = 0.2;
 
-	// grasp ILS(instance, max_iterations, p, r, alpha_2, timer);
-	// solution result = ILS.execute();
-
 	ils ILS(instance, max_iterations, p, r, timer);
 	// ils ILS(instance, max_iterations, max_r, alpha_2, p, r, timer);
 	solution result = ILS.execute();
 
 	timer.stop();
-	// printf("TOTAL EXECUTION TIME: %.2lf", timer.getStopTime());
-	printf("%.2lf,", timer.getStopTime());
-	// result.show_data();
+	printf("TOTAL EXECUTION TIME: %.2lf", timer.getStopTime());
+	// printf("%.2lf,", timer.getStopTime());
+	result.show_data();
 
 	// printf("\nIT_LOG:\n");
 	vector< pair< double, unsigned> > it_log = ILS.get_it_log();
 	vector< double > times = ILS.get_times();
 	double min_time = 0.0;
 	for(unsigned i = 0; i < it_log.size(); i++){
-		// printf("#%d:\t%.2lf\t%.2lf\n", it_log[i].second, it_log[i].first, times[i]);
+		printf("#%d:\t%.2lf\t%.2lf\n", it_log[i].second, it_log[i].first, times[i]);
 
 		if(it_log[i].first == result.get_total_cost() && min_time == 0.0)
 			min_time = times[i];
 	}
 
-	// vector< int > path = GRASP.get_path();
-	// printf("\nPATH RELINKING USAGE:\n");
-	// for(unsigned i = 0; i < path.size(); i++)
-	// 	printf("%d\t", path[i]);
-
+	printf("\n");
 	printf("%.2lf,%.2lf\n", min_time, result.get_total_cost());
 	// cout << "," << seed << endl;
 

@@ -30,6 +30,9 @@ public:
 	// Add constraints for fixing variables
 	void add_fixed_const(vector< bool >&);
 
+	// Add constraints for fixing a part of the hubs variables
+	void add_fixed_const2(vector< bool >&, vector< vector < unsigned> >&);
+
 	// Remove constraints for fixing variables
 	void remove_fixed_const();
 

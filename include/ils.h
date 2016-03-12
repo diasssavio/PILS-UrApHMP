@@ -15,10 +15,15 @@
 #include <ctime>
 #include <limits>
 #include <iostream>
+
+#include <ilcplex/ilocplex.h>
+
 #include "../include/FWChrono.h"
 #include "../include/mt19937ar.h"
 #include "../include/solution.h"
 #include "../include/UrApHMP.h"
+#include "../include/model.h"
+#include "../include/model2.h"
 
 class ils {
 private:
@@ -59,6 +64,7 @@ private:
 	void set_rn1( const vector<solution>& );
 	void _ils();
 	void _ms_ils();
+	void _post_opt(double);
 
 public:
 	ils( uraphmp&, size_t, size_t, double, int, int, FWChrono& );

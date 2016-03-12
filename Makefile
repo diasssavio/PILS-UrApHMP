@@ -16,7 +16,7 @@ MERGE = DYNAMIC
 
 ##### Folders
 # Temp folders
-TMP_ILS = ./tmp/ILS
+TMP_ILS = ./tmp/LB_ILS
 TMP_STATIC = ./tmp/lib/static
 # Perm folders
 DAT_DOXYFILE = ./dat/doxyfile
@@ -54,10 +54,9 @@ CONCERTINCDIR = $(CONCERTDIR)/include
 
 # Header's include path
 CCFLAGS = $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR)
-# CCFLAGS = $(CCOPT)
 
 # Executable name
-CPP_EX = PILS-UrApHMP
+CPP_EX = PILS
 
 # Compiling
 all:
@@ -80,6 +79,14 @@ clean:
 	/bin/rm -rf ./dat
 
 
+########################## FRAMEWORK OBJECT's ######################################################
+# CONFIG
+# $(TMP_ILS)/FWConfig.o: $(SRC)/framework/config/FWConfig.cpp $(SRC)/framework/config/FWConfig.h
+	# $(CCC) -c $(CCFLAGS) $(SRC)/framework/config/FWConfig.cpp -o $(TMP_ILS)/FWConfig.o
+
+# $(TMP_ILS)/FWManager.o: $(SRC)/framework/config/FWManager.cpp $(SRC)/framework/config/FWManager.h
+	# $(CCC) -c $(CCFLAGS) $(SRC)/framework/config/FWManager.cpp -o $(TMP_ILS)/FWManager.o
+
 ########################## GENERATING OBJECT's ######################################################
 
 # CONFIGURATION - INSTANCES
@@ -90,7 +97,7 @@ $(TMP_ILS)/UrApHMP.o: $(SRC)/UrApHMP.cpp $(INCLUDE)/UrApHMP.h
 $(TMP_ILS)/solution.o: $(SRC)/solution.cpp $(INCLUDE)/solution.h
 	$(CCC) -c $(CCFLAGS) $(SRC)/solution.cpp -o $(TMP_ILS)/solution.o
 
-# STRUCTURE - TIMER
+# STRUCTURE - CHRONO
 $(TMP_ILS)/FWChrono.o: $(SRC)/FWChrono.cpp $(INCLUDE)/FWChrono.h
 	$(CCC) -c $(CCFLAGS) $(SRC)/FWChrono.cpp -o $(TMP_ILS)/FWChrono.o
 
@@ -103,6 +110,10 @@ $(TMP_ILS)/model.o: $(SRC)/model.cpp $(INCLUDE)/model.h
 	$(CCC) -c $(CCFLAGS) $(SRC)/model.cpp -o $(TMP_ILS)/model.o
 $(TMP_ILS)/model2.o: $(SRC)/model2.cpp $(INCLUDE)/model2.h
 	$(CCC) -c $(CCFLAGS) $(SRC)/model2.cpp -o $(TMP_ILS)/model2.o
+
+# BOOST
+# $(TMP_ILS)/draw_graph.o: $(SRC)/draw_graph.cpp $(INCLUDE)/draw_graph.h
+# 	$(CCC) -c $(CCFLAGS) $(SRC)/draw_graph.cpp -o $(TMP_ILS)/draw_graph.o
 
 # ILS
 $(TMP_ILS)/ils.o: $(SRC)/ils.cpp $(INCLUDE)/ils.h
@@ -117,20 +128,23 @@ $(TMP_ILS)/main.o: $(SRC)/main.cpp
 $(TMP_ILS)/Configuration.o:  $(TMP_ILS)/UrApHMP.o
 	gcc -Wl,-r  $(TMP_ILS)/UrApHMP.o -o $(TMP_ILS)/Configuration.o -nostdlib
 
-# STRUCTURE & TIMER
+# STRUCTURE
 $(TMP_ILS)/Structure.o: $(TMP_ILS)/solution.o $(TMP_ILS)/FWChrono.o $(TMP_ILS)/mt19937ar.o
 	gcc -Wl,-r $(TMP_ILS)/solution.o $(TMP_ILS)/FWChrono.o $(TMP_ILS)/mt19937ar.o -o $(TMP_ILS)/Structure.o -nostdlib
 
 # EXACT
-$(TMP_ILS)/Exact.o: $(TMP_ILS)/model.o $(TMP_ILS)/model2.o
+$(TMP_ILS)/Exact.o: $(TMP_ILS)/model.o $(TMP_ILS)/model2.o 
 	gcc -Wl,-r $(TMP_ILS)/model.o $(TMP_ILS)/model2.o -o $(TMP_ILS)/Exact.o -nostdlib
+
+# BOOST
+# $(TMP_ILS)/Drawer.o: $(TMP_ILS)/draw_graph.o
+# 	gcc -Wl,-r $(TMP_ILS)/draw_graph.o -o $(TMP_ILS)/Drawer.o -nostdlib
 
 # ILS
 $(TMP_ILS)/ILS.o: $(TMP_ILS)/ils.o
 	gcc -Wl,-r $(TMP_ILS)/ils.o -o $(TMP_ILS)/ILS.o -nostdlib
 
 ########################## LINKANDO TUDO ########################################################
-
 $(CPP_EX): $(TMP_ILS)/Exact.o $(TMP_ILS)/Configuration.o $(TMP_ILS)/Structure.o $(TMP_ILS)/ILS.o $(TMP_ILS)/main.o
-	$(CCC)  $(CCFLAGS) $(TMP_ILS)/Exact.o $(TMP_ILS)/Configuration.o $(TMP_ILS)/Structure.o $(TMP_ILS)/ILS.o $(TMP_ILS)/main.o -L$(TMP_STATIC) -o $(CPP_EX)
+	$(CCC)  $(CCFLAGS) $(TMP_ILS)/Exact.o $(TMP_ILS)/Configuration.o $(TMP_ILS)/Structure.o $(TMP_ILS)/ILS.o $(TMP_ILS)/main.o -L$(TMP_STATIC) -o $(CPP_EX) $(CCLNFLAGS)
 #endif

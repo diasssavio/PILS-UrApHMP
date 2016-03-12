@@ -424,7 +424,6 @@ void ils::_ils(){
 	bool first = true;
 	while(i < max_iterations){
 		// Local Search
-//		improved = local_search_c2n1(improved);
 		improved = local_search_rn1(improved);
 
 		// TODO 3.Evaluation of more than just one solution in the local search
@@ -438,7 +437,7 @@ void ils::_ils(){
 				if(improved.get_total_cost() < best.get_total_cost()){
 					set_best(improved);
 					i = 1;
-				}else i++;
+				} else i++;
 			}
 		} else {
 			best = improved;
@@ -517,6 +516,46 @@ void ils::_ms_ils(){
 	}
 }
 
+void ils::_post_opt(double fix_percent){
+	int n = instance.get_n();
+
+	vector< bool > alloc_hubs = best.get_bin_alloc_hubs();
+	vector< double > hubs_cost = best.get_hubs_cost();
+	
+	vector< pair< double, int > > hubs;
+	for(unsigned i = 0; i < p; i++)
+		hubs.push_back(make_pair(hubs_cost[i], best.get_alloc_hub(i)));
+	sort(hubs.begin(), hubs.end(), my_comparison);
+
+	for(unsigned i = fix_percent * p; i < p; i++)
+		alloc_hubs[hubs[i].second] = 0;
+
+	IloEnv env;
+	try{
+		// model mod(env, instance, best);
+		model2 mod(env, instance, best);
+		mod.add_fixed_const2(alloc_hubs, best.get_assigned_hubs());
+		IloCplex cplex(mod);
+
+		cplex.setParam(IloCplex::Threads, 1);
+		cplex.setParam(IloCplex::Param::Preprocessing::Aggregator, 0);
+		cplex.setParam(IloCplex::Param::Preprocessing::Presolve, 0);
+		cplex.setParam(IloCplex::PreInd, IloFalse);
+		// cplex.setParam(IloCplex::Param::TimeLimit, ntl);
+		// cplex.setParam(IloCplex::Param::MIP::Tolerances::UpperCutoff, UB);
+		// if(first)
+			// cplex.setParam(IloCplex::Param::MIP::Limits::Solutions, 1);
+		// cplex.setParam(IloCplex::Param::Emphasis::MIP, 1);
+		cplex.exportModel("test.lp");
+		cplex.solve();
+
+	} catch(IloException& e){
+		cerr << "Concert Exception:\n" << e << endl;
+	}
+
+	env.end();
+}
+
 solution& ils::execute(){
 	// Pre-processing
 	// preprocessing();
@@ -526,7 +565,9 @@ solution& ils::execute(){
 	else _ms_ils();
 
 	// Post-processing
-//	set_best(local_search_rn1(best));
+	cout << "Entering post optimisation phase!" << endl;
+	best.generate_hubs_cost();
+	_post_opt(0.7);
 
 	return best;
 }

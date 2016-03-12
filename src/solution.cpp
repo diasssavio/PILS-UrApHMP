@@ -68,7 +68,13 @@ int solution::get_p(){ return this->p; }
 
 int solution::get_r(){ return this->r; }
 
-const set< unsigned >& solution::get_alloc_hubs() const{ return this->alloc_hubs; }
+const set< unsigned >& solution::get_alloc_hubs() const { return this->alloc_hubs; }
+
+unsigned solution::get_alloc_hub( unsigned index ) {
+	set< unsigned >::iterator h = alloc_hubs.begin();
+	for(unsigned i = 0; i < index; i++) h++;
+	return *h;
+}
 
 vector< vector< unsigned > >& solution::get_assigned_hubs(){ return this->assigned_hubs; }
 
@@ -90,6 +96,17 @@ double solution::get_total_hubs_cost(){
 	return cost;
 }
 
+vector< bool > solution::get_bin_alloc_hubs(){
+	vector< bool > to_return(instance.get_n(), false);
+	set< unsigned >::iterator h = alloc_hubs.begin();
+	for(int k = 0; k < instance.get_n(); k++)
+		if(*h == k){
+			to_return[k] = true;
+			h++;
+		}
+	return to_return;
+}
+
 double solution::get_total_cost(){ return _cost; }
 
 void solution::generate_hubs_cost(){
@@ -103,9 +120,9 @@ void solution::generate_hubs_cost(){
 	for(set< unsigned >::iterator h = alloc_hubs.begin(); h != alloc_hubs.end(); h++){
 		double value1 = 0.0, value2 = 0.0;
 		for(int i = 0; i < instance.get_n(); i++){
-			if(is_hub(i)) continue;
+			// if(is_hub(i)) continue;
 			for(int j = 0; j < instance.get_n(); j++){
-				if(is_hub(j)) continue;
+				// if(is_hub(j)) continue;
 				if(f_chosen[i][j] == *h){
 					value1 += traffics[i][j] * ((X * distances[i][f_chosen[i][j]]) +
 						((alpha/2) * distances[f_chosen[i][j]][s_chosen[i][j]]));
@@ -128,7 +145,7 @@ void solution::show_data(){
 	for(set< unsigned >::iterator h = alloc_hubs.begin(); h != alloc_hubs.end(); h++)
 		printf("%d\t", (*h + 1));
 
-	/*printf("\n\nAssigned Hubs:\n");
+	printf("\n\nAssigned Hubs:\n");
 	for(int i = 0; i < instance.get_n(); i++){
 		if(is_hub(i)) continue;
 		printf("H[%d]: ", i);
@@ -137,7 +154,7 @@ void solution::show_data(){
 		printf("\n");
 	}
 
-	printf("\n\nTraffics Routes:\n");
+	/*printf("\n\nTraffics Routes:\n");
 	for(int i = 0; i < instance.get_n(); i++){
 		if(is_hub(i)) continue;
 		printf("i[%d]: ", i);
@@ -265,7 +282,7 @@ void solution::route_traffics(){
 	set_cost(cost);
 	set_f_chosen(H1);
 	set_s_chosen(H2);
-	generate_hubs_cost();
+	// generate_hubs_cost();
 }
 
 void solution::route_partial_traffics( int i ){
