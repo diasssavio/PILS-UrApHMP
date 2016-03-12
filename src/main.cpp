@@ -14,7 +14,6 @@
 
 #include "../include/FWChrono.h"
 #include "../include/mt19937ar.h"
-#include "../include/grasp.h"
 #include "../include/ils.h"
 #include "../include/solution.h"
 #include "../include/UrApHMP.h"
@@ -72,8 +71,8 @@ int main(int argc, char* args[]) {
 	// grasp ILS(instance, max_iterations, p, r, alpha_2, timer);
 	// solution result = ILS.execute();
 
-	// ils ILS(instance, max_iterations, p, r, timer);
-	ils ILS(instance, max_iterations, max_r, alpha_2, p, r, timer);
+	ils ILS(instance, max_iterations, p, r, timer);
+	// ils ILS(instance, max_iterations, max_r, alpha_2, p, r, timer);
 	solution result = ILS.execute();
 
 	timer.stop();

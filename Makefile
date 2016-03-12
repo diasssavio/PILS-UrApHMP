@@ -108,10 +108,6 @@ $(TMP_ILS)/model2.o: $(SRC)/model2.cpp $(INCLUDE)/model2.h
 $(TMP_ILS)/ils.o: $(SRC)/ils.cpp $(INCLUDE)/ils.h
 	$(CCC) -c $(CCFLAGS) $(SRC)/ils.cpp -o $(TMP_ILS)/ils.o
 
-# GRASP
-$(TMP_ILS)/grasp.o: $(SRC)/grasp.cpp $(INCLUDE)/grasp.h
-	$(CCC) -c $(CCFLAGS) $(SRC)/grasp.cpp -o $(TMP_ILS)/grasp.o
-
 # MAIN
 $(TMP_ILS)/main.o: $(SRC)/main.cpp
 	$(CCC) -c $(CCFLAGS) $(SRC)/main.cpp -o $(TMP_ILS)/main.o
@@ -133,12 +129,8 @@ $(TMP_ILS)/Exact.o: $(TMP_ILS)/model.o $(TMP_ILS)/model2.o
 $(TMP_ILS)/ILS.o: $(TMP_ILS)/ils.o
 	gcc -Wl,-r $(TMP_ILS)/ils.o -o $(TMP_ILS)/ILS.o -nostdlib
 
-# GRASP
-$(TMP_ILS)/GRASP.o: $(TMP_ILS)/grasp.o
-	gcc -Wl,-r $(TMP_ILS)/grasp.o -o $(TMP_ILS)/GRASP.o -nostdlib
-
 ########################## LINKANDO TUDO ########################################################
 
-$(CPP_EX): $(TMP_ILS)/Exact.o $(TMP_ILS)/Configuration.o $(TMP_ILS)/Structure.o $(TMP_ILS)/ILS.o $(TMP_ILS)/GRASP.o $(TMP_ILS)/main.o
-	$(CCC)  $(CCFLAGS) $(TMP_ILS)/Exact.o $(TMP_ILS)/Configuration.o $(TMP_ILS)/Structure.o $(TMP_ILS)/ILS.o $(TMP_ILS)/GRASP.o $(TMP_ILS)/main.o -L$(TMP_STATIC) -o $(CPP_EX)
+$(CPP_EX): $(TMP_ILS)/Exact.o $(TMP_ILS)/Configuration.o $(TMP_ILS)/Structure.o $(TMP_ILS)/ILS.o $(TMP_ILS)/main.o
+	$(CCC)  $(CCFLAGS) $(TMP_ILS)/Exact.o $(TMP_ILS)/Configuration.o $(TMP_ILS)/Structure.o $(TMP_ILS)/ILS.o $(TMP_ILS)/main.o -L$(TMP_STATIC) -o $(CPP_EX)
 #endif
