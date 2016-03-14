@@ -145,7 +145,7 @@ void solution::show_data(){
 	for(set< unsigned >::iterator h = alloc_hubs.begin(); h != alloc_hubs.end(); h++)
 		printf("%d\t", (*h + 1));
 
-	printf("\n\nAssigned Hubs:\n");
+	/*printf("\n\nAssigned Hubs:\n");
 	for(int i = 0; i < instance.get_n(); i++){
 		if(is_hub(i)) continue;
 		printf("H[%d]: ", i);
@@ -194,6 +194,12 @@ void solution::show_data(){
 }
 
 bool solution::is_hub( unsigned index ){ return (alloc_hubs.find(index) != alloc_hubs.end()); }
+
+bool solution::is_assigned( unsigned index, unsigned hub ){
+	for(unsigned k = 0; k < assigned_hubs[index].size(); k++)
+			if(assigned_hubs[index][k] == hub) return true;
+	return false;
+}
 
 bool solution::my_comparison( pair< double, int > p1, pair< double, int > p2 ){ return (p1.first < p2.first); }
 

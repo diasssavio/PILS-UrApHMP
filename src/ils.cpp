@@ -10,8 +10,11 @@
 ils::ils( uraphmp& instance, size_t max_iterations, size_t _max_r, double _alpha, int p, int r, FWChrono& timer ) : max_iterations(max_iterations), p(p), r(r), alpha(_alpha), max_r_iterations(_max_r) {
 	this->set_instance(instance);
 	this->mesh = vector< unsigned >(instance.get_n());
-	for(unsigned i = 0; i < mesh.size(); i++)
+	this->u_table = vector< vector< bool > >(instance.get_n());
+	for(unsigned i = 0; i < mesh.size(); i++) {
 		this->mesh[i] = i;
+		this->u_table[i] = vector< bool >(instance.get_n());
+	}
 	this->timer = timer;
 	this->recent_hub = -1;
 	this->recent_assign = std::vector< bool >(instance.get_n());
@@ -20,8 +23,11 @@ ils::ils( uraphmp& instance, size_t max_iterations, size_t _max_r, double _alpha
 ils::ils( uraphmp& instance, size_t max_iterations, int p, int r, FWChrono& timer ) : max_iterations(max_iterations), p(p), r(r) {
 	this->set_instance(instance);
 	this->mesh = vector< unsigned >(instance.get_n());
-	for(unsigned i = 0; i < mesh.size(); i++)
+	this->u_table = vector< vector< bool > >(instance.get_n());
+	for(unsigned i = 0; i < mesh.size(); i++) {
 		this->mesh[i] = i;
+		this->u_table[i] = vector< bool >(instance.get_n());
+	}
 	this->timer = timer;
 	this->alpha = 0.0;
 	this->max_r_iterations = 0;
@@ -415,7 +421,17 @@ solution& ils::neighborhood_a( solution& p_sol ){
 	return *min_element(na.begin(), na.end(), solution::my_sol_comparison);
 }
 
-void ils::_ils(){
+void ils::update_u_table(solution& current) {
+	int n = instance.get_n();
+	for(unsigned i = 0; i < n; i++)
+		for(unsigned j = 0; j < n; j++)
+			if(i == j && current.is_hub(i))
+				u_table[i][i] = true;
+			else if(current.is_assigned(i, j))
+				u_table[i][j] = true;
+}
+
+void ils::_ils() {
 	// Constructing initial solution
 	solution initial = constructor();
 	solution improved = initial;
@@ -443,6 +459,9 @@ void ils::_ils(){
 			best = improved;
 			first = false;
 		}
+
+		// Updating used table
+		update_u_table(improved);
 
 		// Shaking phase
 		improved = rn1[ genrand_int32() % rn1.size() ];
@@ -533,8 +552,10 @@ void ils::_post_opt(double fix_percent){
 	IloEnv env;
 	try{
 		// model mod(env, instance, best);
-		model2 mod(env, instance, best);
-		mod.add_fixed_const2(alloc_hubs, best.get_assigned_hubs());
+		// model2 mod(env, instance, best);
+		// mod.add_fixed_const2(alloc_hubs, best.get_assigned_hubs());
+		// model2 mod(env, instance, best, alloc_hubs);
+		model2 mod(env, instance, best, alloc_hubs, u_table);
 		IloCplex cplex(mod);
 
 		cplex.setParam(IloCplex::Threads, 1);
@@ -542,7 +563,7 @@ void ils::_post_opt(double fix_percent){
 		cplex.setParam(IloCplex::Param::Preprocessing::Presolve, 0);
 		cplex.setParam(IloCplex::PreInd, IloFalse);
 		// cplex.setParam(IloCplex::Param::TimeLimit, ntl);
-		// cplex.setParam(IloCplex::Param::MIP::Tolerances::UpperCutoff, UB);
+		cplex.setParam(IloCplex::Param::MIP::Tolerances::UpperCutoff, best.get_total_cost());
 		// if(first)
 			// cplex.setParam(IloCplex::Param::MIP::Limits::Solutions, 1);
 		// cplex.setParam(IloCplex::Param::Emphasis::MIP, 1);
@@ -567,6 +588,11 @@ solution& ils::execute(){
 	// Post-processing
 	cout << "Entering post optimisation phase!" << endl;
 	best.generate_hubs_cost();
+	unsigned counter = 0;
+	for(unsigned i = 0; i < instance.get_n(); i++)
+		for(unsigned j = 0; j < instance.get_n(); j++)
+			if(!u_table[i][j] && i != j) counter++;
+	cout << "Non used edges: " << counter << endl;
 	_post_opt(0.7);
 
 	return best;

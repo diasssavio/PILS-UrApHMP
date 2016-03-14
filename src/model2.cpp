@@ -13,6 +13,18 @@ model2::model2(IloEnv _env, uraphmp& _instance, solution& _sol) : IloModel(_env)
 	add_const();
 }
 
+model2::model2(IloEnv _env, uraphmp& _instance, solution& _sol, vector< bool >& alloc_hubs) : IloModel(_env), instance(_instance), sol(_sol) {
+	init_fixed(alloc_hubs);
+	add_obj();
+	add_const();
+}
+
+model2::model2(IloEnv _env, uraphmp& _instance, solution& _sol, vector< bool >& alloc_hubs, vector< vector< bool > >& u_table) : IloModel(_env), instance(_instance), sol(_sol) {
+	init_fixed(alloc_hubs, u_table);
+	add_obj();
+	add_const();
+}
+
 model2::~model2() { }
 
 void model2::init(){
@@ -48,6 +60,108 @@ void model2::init(){
 		for(IloInt k = 0; k < n; k++){
 			z[i][k] = IloNumVar(getEnv(), 0, 1, ILOINT);
 			// z[i][k] = IloNumVar(getEnv(), 0, 1, ILOFLOAT);
+			stringstream z_name;
+			z_name << "z(" << i << ")(" << k << ")";
+			z[i][k].setName(z_name.str().c_str());
+			add(z[i][k]);
+
+			w[i][k] = IloNumVar(getEnv(), 0, +IloInfinity, ILOFLOAT);
+			stringstream w_name;
+			w_name << "w(" << i << ")(" << k << ")";
+			w[i][k].setName(w_name.str().c_str());
+			add(w[i][k]);
+		}
+	}
+}
+
+void model2::init_fixed(vector< bool >& alloc_hubs){
+	int n = instance.get_n();
+	w = IloNumVarArray2(getEnv(), n);
+	x = IloNumVarArray3(getEnv(), n);
+	y = IloNumVarArray3(getEnv(), n);
+	z = IloNumVarArray2(getEnv(), n);
+
+	for(IloInt i = 0; i < n; i++){
+		x[i] = IloNumVarArray2(getEnv(), n);
+		y[i] = IloNumVarArray2(getEnv(), n);
+		for(IloInt k = 0; k < n; k++){
+			x[i][k] = IloNumVarArray(getEnv(), n);
+			y[i][k] = IloNumVarArray(getEnv(), n);
+			for(IloInt j = 0; j < n; j++){
+				x[i][k][j] = IloNumVar(getEnv(), 0, +IloInfinity, ILOFLOAT);
+				stringstream x_name;
+				x_name << "x(" << i << ")(" << k << ")(" << j << ")";
+				x[i][k][j].setName(x_name.str().c_str());
+				add(x[i][k][j]);
+
+				y[i][k][j] = IloNumVar(getEnv(), 0, +IloInfinity, ILOFLOAT);
+				stringstream y_name;
+				y_name << "y(" << i << ")(" << k << ")(" << j << ")";
+				y[i][k][j].setName(y_name.str().c_str());
+				add(y[i][k][j]);
+			}
+		}
+
+		w[i] = IloNumVarArray(getEnv(), n);
+		z[i] = IloNumVarArray(getEnv(), n);
+		for(IloInt k = 0; k < n; k++){
+			if(((i == k) || sol.is_assigned(i, k)) && alloc_hubs[k])
+				z[i][k] = IloNumVar(getEnv(), 1, 1, ILOINT);
+			else
+				z[i][k] = IloNumVar(getEnv(), 0, 1, ILOINT);
+				// z[i][k] = IloNumVar(getEnv(), 0, 1, ILOFLOAT);
+			stringstream z_name;
+			z_name << "z(" << i << ")(" << k << ")";
+			z[i][k].setName(z_name.str().c_str());
+			add(z[i][k]);
+
+			w[i][k] = IloNumVar(getEnv(), 0, +IloInfinity, ILOFLOAT);
+			stringstream w_name;
+			w_name << "w(" << i << ")(" << k << ")";
+			w[i][k].setName(w_name.str().c_str());
+			add(w[i][k]);
+		}
+	}
+}
+
+void model2::init_fixed(vector< bool >& alloc_hubs, vector< vector< bool > >& u_table){
+	int n = instance.get_n();
+	w = IloNumVarArray2(getEnv(), n);
+	x = IloNumVarArray3(getEnv(), n);
+	y = IloNumVarArray3(getEnv(), n);
+	z = IloNumVarArray2(getEnv(), n);
+
+	for(IloInt i = 0; i < n; i++){
+		x[i] = IloNumVarArray2(getEnv(), n);
+		y[i] = IloNumVarArray2(getEnv(), n);
+		for(IloInt k = 0; k < n; k++){
+			x[i][k] = IloNumVarArray(getEnv(), n);
+			y[i][k] = IloNumVarArray(getEnv(), n);
+			for(IloInt j = 0; j < n; j++){
+				x[i][k][j] = IloNumVar(getEnv(), 0, +IloInfinity, ILOFLOAT);
+				stringstream x_name;
+				x_name << "x(" << i << ")(" << k << ")(" << j << ")";
+				x[i][k][j].setName(x_name.str().c_str());
+				add(x[i][k][j]);
+
+				y[i][k][j] = IloNumVar(getEnv(), 0, +IloInfinity, ILOFLOAT);
+				stringstream y_name;
+				y_name << "y(" << i << ")(" << k << ")(" << j << ")";
+				y[i][k][j].setName(y_name.str().c_str());
+				add(y[i][k][j]);
+			}
+		}
+
+		w[i] = IloNumVarArray(getEnv(), n);
+		z[i] = IloNumVarArray(getEnv(), n);
+		for(IloInt k = 0; k < n; k++){
+			if(((i == k) || sol.is_assigned(i, k)) && alloc_hubs[k])
+				z[i][k] = IloNumVar(getEnv(), 1, 1, ILOINT);
+			else if (!u_table[i][k] && (i != k))
+				z[i][k] = IloNumVar(getEnv(), 0, 0, ILOINT);
+			else
+				z[i][k] = IloNumVar(getEnv(), 0, 1, ILOINT);
+				// z[i][k] = IloNumVar(getEnv(), 0, 1, ILOFLOAT);
 			stringstream z_name;
 			z_name << "z(" << i << ")(" << k << ")";
 			z[i][k].setName(z_name.str().c_str());

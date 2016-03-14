@@ -18,11 +18,15 @@
 class model2 : public IloModel {
 private:
 	void init(); // Initialize all variables for problem
+	void init_fixed(vector< bool >&); // Initialize all variables for problem, plus fixed ones
+	void init_fixed(vector< bool >&, vector< vector< bool > >&); // Initialize all variables for problem, plus fixed ones
 	void add_const(); // Add constraints to model
 	void add_obj(); // Add objective function to model
 
 public:
 	model2(IloEnv, uraphmp&, solution&);
+	model2(IloEnv, uraphmp&, solution&, vector< bool >&);
+	model2(IloEnv, uraphmp&, solution&, vector< bool >&, vector< vector< bool > >&);
 	virtual ~model2();
 
 	// Add constraints for fixing variables

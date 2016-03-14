@@ -15,6 +15,7 @@
 #include <ctime>
 #include <limits>
 #include <iostream>
+#include <iomanip>
 
 #include <ilcplex/ilocplex.h>
 
@@ -57,11 +58,17 @@ private:
 	vector< double > times;
 	FWChrono timer;
 
+	// Used Table
+	vector< vector< bool > > u_table;
+
 	// Private methods
 	static bool my_comparison( pair< double, int >, pair< double, int > );
 	void set_c2n1( const vector<solution>& );
 	void set_na( const vector<solution>& );
 	void set_rn1( const vector<solution>& );
+
+	void update_u_table( solution& );
+
 	void _ils();
 	void _ms_ils();
 	void _post_opt(double);
